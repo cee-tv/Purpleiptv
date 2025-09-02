@@ -1415,41 +1415,49 @@ const channels = [
     },
 ]
 
-setupChannelList = function() {
-  const list = document.getElementById('channelList');
-  const countDisplay = document.getElementById('channelCount');
-  const searchValue = document.getElementById('searchInput').value.toLowerCase();
-  const selectedCategory = document.getElementById('categoryFilter').value;
+function setupChannelList() {
+    const list = document.getElementById('channelList');
+    const countDisplay = document.getElementById('channelCount');
+    const searchValue = document.getElementById('searchInput').value.toLowerCase();
+    const selectedCategory = document.getElementById('categoryFilter').value;
 
-  list.innerHTML = '';
-  let totalCount = 0;
-  let visibleIndex = 0;
+    list.innerHTML = '';
+    let totalCount = 0;
+    let visibleIndex = 0;
 
-  channels.forEach((channel, originalIndex) => {
-    const matchesCategory = selectedCategory === 'all' || channel.category === selectedCategory;
-    const matchesSearch = channel.name.toLowerCase().includes(searchValue);
+    channels.forEach((channel, originalIndex) => {
+        const matchesCategory = selectedCategory === 'all' || channel.category === selectedCategory;
+        const matchesSearch = channel.name.toLowerCase().includes(searchValue);
 
-    if (matchesCategory && matchesSearch) {
-      totalCount++;
-      
-      // Use original array index + 1 for unique numbering
-      const displayNumber = originalIndex + 1;
+        if (matchesCategory && matchesSearch) {
+            totalCount++;
 
-      const listItem = document.createElement('li');
-      listItem.tabIndex = 0;
-      listItem.onclick = () => loadChannel(originalIndex);
-      listItem.setAttribute('data-number', displayNumber);
-      listItem.setAttribute('data-original-index', originalIndex);
+            const displayNumber = originalIndex + 1;
 
-      if (originalIndex === activeIndex) {
-        listItem.classList.add('active');
-      }
+            const listItem = document.createElement('li');
+            listItem.tabIndex = 0;
+            listItem.onclick = () => loadChannel(originalIndex);
+            listItem.setAttribute('data-number', displayNumber);
+            listItem.setAttribute('data-original-index', originalIndex);
 
-      listItem.textContent = channel.name + ' ';
-      
-      list.appendChild(listItem);
-    }
-  });
+            if (originalIndex === activeIndex) {
+                listItem.classList.add('active');
+                currentChannelIndex = originalIndex;
+                
+                // Ensure selected channel is visible in container
+                setTimeout(() => {
+                    listItem.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'nearest',
+                        inline: 'nearest'
+                    });
+                }, 100);
+            }
 
-  countDisplay.textContent = `Total: ${totalCount}/${channels.length}`;
-};
+            listItem.textContent = channel.name + ' ';
+            list.appendChild(listItem);
+        }
+    });
+
+    countDisplay.textContent = `Total: ${totalCount}/${channels.length}`;
+}
