@@ -4,13 +4,13 @@ function addVideoPlayerClickHandler() {
     if (videoContainer) {
         videoContainer.addEventListener('click', (e) => {
             // Only hide if remote is visible and not clicking on remote itself
-            if (remoteControl && !remoteControl.classList.contains('hidden') && 
-                !e.target.closest('.remote-control') && 
+            if (remoteControl && !remoteControl.classList.contains('hidden') &&
+                !e.target.closest('.remote-control') &&
                 !e.target.closest('.remote-control-toggle')) {
                 remoteControl.classList.add('hidden');
                 // Update localStorage
                 localStorage.setItem('remoteControlHidden', 'true');
-                
+
                 // Hide keyboard guide if open
                 if (keyboardGuide && keyboardGuide.classList.contains('show')) {
                     keyboardGuide.classList.remove('show');
@@ -23,17 +23,26 @@ function addVideoPlayerClickHandler() {
 
 // Add startup functionality
 document.addEventListener('DOMContentLoaded', () => {
+    // Check authentication
+    const signedInDate = sessionStorage.getItem('sessionSignedInDate');
+    const expectedDate = new Date().toISOString().split('T')[0];
+    
+    if (!signedInDate || signedInDate !== expectedDate) {
+        window.location.href = 'index.html';
+        return;
+    }
+
     const startupOverlay = document.getElementById('startupOverlay');
     const startBtn = document.getElementById('startWatchingBtn');
-    
+
     // Add startup mode to body
     document.body.classList.add('startup-mode');
-    
+
     // Handle fullscreen changes
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
-    
+
     startBtn.addEventListener('click', async () => {
         try {
             // Request fullscreen
@@ -45,54 +54,54 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (container.msRequestFullscreen) {
                 await container.msRequestFullscreen();
             }
-            
+
             // Attempt to lock landscape orientation
             if (screen.orientation && screen.orientation.lock) {
                 await screen.orientation.lock('landscape');
             }
-            
+
             // Hide startup overlay
             startupOverlay.classList.add('hidden');
             document.body.classList.remove('startup-mode');
             hideFallbackMessage();
-            
+
             // Hide remote control initially
             if (remoteControl) {
                 remoteControl.classList.add('hidden');
             }
-            
+
             // Collapse sidebar after startup
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
             sidebar.classList.add('collapsed');
             const arrow = sidebarToggle.querySelector('.arrow-icon');
             if (arrow) arrow.textContent = '☰';
-            
+
             // Initialize the app
             setTimeout(() => {
                 startupOverlay.style.display = 'none';
                 // Auto-play channel 1 after startup
                 loadChannel(0); // Channel index starts at 0 (channel 1)
             }, 500);
-            
+
         } catch (error) {
             console.log('Fullscreen/landscape not supported, continuing...');
             startupOverlay.classList.add('hidden');
             document.body.classList.remove('startup-mode');
             hideFallbackMessage();
-            
+
             // Hide remote control initially
             if (remoteControl) {
                 remoteControl.classList.add('hidden');
             }
-            
+
             // Collapse sidebar after startup
             const sidebar = document.getElementById('sidebar');
             const sidebarToggle = document.getElementById('sidebarToggle');
             sidebar.classList.add('collapsed');
             const arrow = sidebarToggle.querySelector('.arrow-icon');
             if (arrow) arrow.textContent = '☰';
-            
+
             setTimeout(() => {
                 startupOverlay.style.display = 'none';
                 // Auto-play channel 1 after startup
@@ -105,26 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         addVideoPlayerClickHandler();
     }, 1000);
-
-    // Wait for DOM to load before updating toggle button styling
-    document.addEventListener('DOMContentLoaded', () => {
-        const remoteToggle = document.querySelector('.remote-control-toggle');
-        if (remoteToggle) {
-            remoteToggle.style.background = 'linear-gradient(135deg, var(--sidebar-bg), #333)';
-            remoteToggle.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.3)';
-            remoteToggle.style.transition = 'all 0.3s ease';
-            
-            remoteToggle.addEventListener('mouseenter', () => {
-                remoteToggle.style.background = 'linear-gradient(135deg, var(--hover-bg), #444)';
-                remoteToggle.style.transform = 'translateY(-50%) translateX(2px)';
-            });
-            
-            remoteToggle.addEventListener('mouseleave', () => {
-                remoteToggle.style.background = 'linear-gradient(135deg, var(--sidebar-bg), #333)';
-                remoteToggle.style.transform = 'translateY(-50%)';
-            });
-        }
-    });
 });
 
 function handleFullscreenChange() {
@@ -135,7 +124,7 @@ function handleFullscreenChange() {
         setTimeout(() => {
             const viewportHeight = window.innerHeight;
             // Removed theme toggle height (was 180px, now closer to 130px or less depending on gap)
-            const controlsHeight = 130; 
+            const controlsHeight = 130;
             listContainer.style.height = `calc(${viewportHeight}px - ${controlsHeight}px)`;
         }, 100);
     }
@@ -149,7 +138,7 @@ function updateClock() {
 function populateCategoryDropdown() {
   const dropdown = document.getElementById('categoryFilter');
   const categories = [...new Set(channels.map(ch => ch.category))].sort();
-  
+
   // Add "All" option first
   const allOption = document.createElement('option');
   allOption.value = 'all';
@@ -180,7 +169,8 @@ let isKeyboardGuideVisible = false;
 function createRemoteControlToggle() {
     const remoteToggle = document.createElement('button');
     remoteToggle.className = 'remote-control-toggle';
-    remoteToggle.innerHTML = '<svg class="toggle-icon" viewBox="0 0 24 24"><path d="M4 18h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1zm0-5h16c.55 0 1-.45 1-1s-.45-1-1-1H4c-.55 0-1 .45-1 1s.45 1 1 1z"/></svg>';
+    // Add 'toggle-icon' class to the SVG for proper styling
+    remoteToggle.innerHTML = '<svg class="toggle-icon" version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 32 32" xml:space="preserve" width="256px" height="256px" fill="#ffffff" stroke="#ffffff"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g><g id="SVGRepo_iconCarrier"> <style type="text/css"> .st0{fill:none;stroke:#ffffff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;} </style> <path class="st0" d="M21,31H11c-1.1,0-2-0.9-2-2V3c0-1.1,0.9-2,2-2h10c1.1,0,2,0.9,2,2v26C23,30.1,22.1,31,21,31z"></path> <line class="st0" x1="16" y1="22" x2="16" y2="21"></line> <line class="st0" x1="16" y1="27" x2="16" y2="26"></line> <line class="st0" x1="14" y1="24" x2="13" y2="24"></line> <line class="st0" x1="19" y1="24" x2="18" y2="24"></line> <line class="st0" x1="14" y1="17" x2="13" y2="17"></line> <line class="st0" x1="19" y1="17" x2="18" y2="17"></line> <circle cx="13" cy="8" r="1"></circle> <circle cx="13" cy="5" r="1"></circle> <circle cx="16" cy="8" r="1"></circle> <circle cx="19" cy="8" r="1"></circle> <circle cx="13" cy="11" r="1"></circle> <circle cx="16" cy="11" r="1"></circle> <circle cx="19" cy="11" r="1"></circle> <circle cx="13" cy="14" r="1"></circle> <circle cx="16" cy="14" r="1"></circle> <circle cx="19" cy="14" r="1"></circle> </g></svg>';
     remoteToggle.title = 'Toggle Remote Control';
     document.body.appendChild(remoteToggle);
 
@@ -208,7 +198,7 @@ function createRemoteControl() {
     // Create remote control container
     remoteControl = document.createElement('div');
     remoteControl.className = 'remote-control';
-    
+
     // Update the remote control layout to use grid positioning
     remoteControl.innerHTML = `
         <div class="remote-buttons">
@@ -296,30 +286,24 @@ function addRemoteControlEvents() {
 function handleRemoteAction(action) {
     const sidebar = document.getElementById('sidebar');
     const channelItems = Array.from(document.querySelectorAll('#channelList li'));
-    
+
     switch(action) {
         case 'up':
-            // Always focus on the currently playing channel (activeIndex) before navigating
-            currentChannelIndex = activeIndex;
-            if (currentChannelIndex > 0) {
-                currentChannelIndex--;
-                updateChannelSelection();
-                if (channelItems[currentChannelIndex]) {
-                    channelItems[currentChannelIndex].click();
-                    showChannelInfo(currentChannelIndex);
-                }
+            const currentUpIndex = channelItems.findIndex(item => parseInt(item.getAttribute('data-original-index')) === activeIndex);
+            if (currentUpIndex > 0) {
+                const prevItem = channelItems[currentUpIndex - 1];
+                const prevIndex = parseInt(prevItem.getAttribute('data-original-index'));
+                loadChannel(prevIndex);
+                showChannelInfo(prevIndex);
             }
             break;
         case 'down':
-            // Always focus on the currently playing channel (activeIndex) before navigating
-            currentChannelIndex = activeIndex;
-            if (currentChannelIndex < channelItems.length - 1) {
-                currentChannelIndex++;
-                updateChannelSelection();
-                if (channelItems[currentChannelIndex]) {
-                    channelItems[currentChannelIndex].click();
-                    showChannelInfo(currentChannelIndex);
-                }
+            const currentDownIndex = channelItems.findIndex(item => parseInt(item.getAttribute('data-original-index')) === activeIndex);
+            if (currentDownIndex < channelItems.length - 1 && currentDownIndex !== -1) {
+                const nextItem = channelItems[currentDownIndex + 1];
+                const nextIndex = parseInt(nextItem.getAttribute('data-original-index'));
+                loadChannel(nextIndex);
+                showChannelInfo(nextIndex);
             }
             break;
         case 'left':
@@ -338,34 +322,34 @@ function updateChannelSelection() {
     channelItems.forEach((item, index) => {
         item.classList.toggle('active', index === currentChannelIndex);
     });
-    
+
     // Scroll to selected channel
     channelItems[currentChannelIndex]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function jumpToChannel(number) {
     const maxChannels = channels.length;
-    
+
     // Clear previous timeout
     if (channelInputTimeout) {
         clearTimeout(channelInputTimeout);
     }
-    
+
     // Add digit to buffer
     channelInputBuffer += number.toString();
-    
+
     // Show only the number while typing
     showChannelInput(channelInputBuffer, true);
-    
+
     // Set timeout to complete input
     channelInputTimeout = setTimeout(() => {
         const targetNumber = parseInt(channelInputBuffer);
         const targetIndex = Math.min(targetNumber - 1, maxChannels - 1);
-        
+
         if (targetIndex >= 0 && targetNumber <= maxChannels) {
             currentChannelIndex = targetIndex;
             updateChannelSelection();
-            
+
             // Check if this is the same channel as currently playing
             if (targetIndex === activeIndex) {
                 // Auto-restart the same channel by forcing a reload
@@ -383,7 +367,7 @@ function jumpToChannel(number) {
                 });
             }
         }
-        
+
         // Clear buffer after processing
         channelInputBuffer = '';
         hideChannelInput();
@@ -432,7 +416,7 @@ function showChannelInfo(index) {
             </div>
         `;
         channelDisplay.classList.add('show');
-        
+
         setTimeout(() => {
             channelDisplay.classList.remove('show');
         }, 2000);
@@ -452,10 +436,10 @@ function hideKeyboardGuide() {
 // Keyboard event handler
 function handleKeyboardEvents(e) {
     if (e.target.tagName === 'INPUT') return;
-    
+
     const sidebar = document.getElementById('sidebar');
     const channelItems = Array.from(document.querySelectorAll('#channelList li'));
-    
+
     // Handle number keys 0-9
     const num = parseInt(e.key);
     if (e.key >= '0' && e.key <= '9') {
@@ -463,32 +447,26 @@ function handleKeyboardEvents(e) {
         jumpToChannel(parseInt(e.key));
         return;
     }
-    
+
     switch(e.key) {
         case 'ArrowUp':
             e.preventDefault();
-            // Always focus on the currently playing channel (activeIndex) before navigating
-            currentChannelIndex = activeIndex;
-            if (currentChannelIndex > 0) {
-                currentChannelIndex--;
-                updateChannelSelection();
-                if (channelItems[currentChannelIndex]) {
-                    channelItems[currentChannelIndex].click();
-                    showChannelInfo(currentChannelIndex);
-                }
+            const currentUpIndex = channelItems.findIndex(item => parseInt(item.getAttribute('data-original-index')) === activeIndex);
+            if (currentUpIndex > 0) {
+                const prevItem = channelItems[currentUpIndex - 1];
+                const prevIndex = parseInt(prevItem.getAttribute('data-original-index'));
+                loadChannel(prevIndex);
+                showChannelInfo(prevIndex);
             }
             break;
         case 'ArrowDown':
             e.preventDefault();
-            // Always focus on the currently playing channel (activeIndex) before navigating
-            currentChannelIndex = activeIndex;
-            if (currentChannelIndex < channelItems.length - 1) {
-                currentChannelIndex++;
-                updateChannelSelection();
-                if (channelItems[currentChannelIndex]) {
-                    channelItems[currentChannelIndex].click();
-                    showChannelInfo(currentChannelIndex);
-                }
+            const currentDownIndex = channelItems.findIndex(item => parseInt(item.getAttribute('data-original-index')) === activeIndex);
+            if (currentDownIndex < channelItems.length - 1 && currentDownIndex !== -1) {
+                const nextItem = channelItems[currentDownIndex + 1];
+                const nextIndex = parseInt(nextItem.getAttribute('data-original-index'));
+                loadChannel(nextIndex);
+                showChannelInfo(nextIndex);
             }
             break;
         case 'ArrowLeft':
@@ -566,7 +544,7 @@ function setupChannelList() {
 
     if (matchesCategory && matchesSearch) {
       totalCount++;
-      
+
       // Use originalIndex + 1 for unique, persistent channel numbers
       const displayNumber = originalIndex + 1;
 
@@ -582,7 +560,7 @@ function setupChannelList() {
       }
 
       listItem.textContent = channel.name + ' ';
-      
+
       list.appendChild(listItem);
     }
   });
@@ -602,7 +580,7 @@ let isReconnecting = false;
 // Add channel health monitoring
 function startHealthCheck() {
     if (healthCheckInterval) clearInterval(healthCheckInterval);
-    
+
     healthCheckInterval = setInterval(async () => {
         if (activeIndex >= 0 && !isReconnecting) {
             const channel = channels[activeIndex];
@@ -623,27 +601,27 @@ function startHealthCheck() {
 function attemptReconnection() {
     isReconnecting = true;
     reconnectionAttempts++;
-    
+
     // Show reconnection message (will show infinite attempt)
     showReconnectionMessage(reconnectionAttempts);
-    
+
     // Clear previous timeout
     if (reconnectTimeout) clearTimeout(reconnectTimeout);
-    
+
     // Attempt to reconnect
     reconnectTimeout = setTimeout(async () => {
         // Check if internet is back by testing a lightweight endpoint
         try {
-            await fetch('https://www.google.com/favicon.ico', { 
-                method: 'HEAD', 
-                mode: 'no-cors' 
+            await fetch('https://www.google.com/favicon.ico', {
+                method: 'HEAD',
+                mode: 'no-cors'
             });
-            
+
             // Internet is back - restart connection
             if (activeIndex >= 0) {
                 loadChannel(activeIndex);
             }
-            
+
             setTimeout(() => {
                 if (jwPlayerInstance && jwPlayerInstance.getState() === 'playing') {
                     reconnectionAttempts = 0;
@@ -651,7 +629,7 @@ function attemptReconnection() {
                     hideReconnectionMessage();
                 }
             }, 2000);
-            
+
         } catch (error) {
             // Internet still down - continue retrying indefinitely
             // No maximum retry limit, just continue
@@ -767,7 +745,7 @@ const originalLoadChannel = loadChannel;
 loadChannel = function(index) {
     showLoading();
     let progress = 0;
-    
+
     // Simulate loading progress with realistic intervals
     const interval = setInterval(() => {
         progress += Math.random() * 15 + 5;
@@ -777,10 +755,10 @@ loadChannel = function(index) {
         }
         updateLoadingProgress(progress);
     }, 100);
-    
+
     // Override the original loadChannel to hide loading when video starts
     originalLoadChannel(index);
-    
+
     // Listen for jwplayer events
     if (jwPlayerInstance) {
         const completeProgress = () => {
@@ -790,22 +768,22 @@ loadChannel = function(index) {
                 hideLoading();
             }, 200);
         };
-        
+
         const onPlayHandler = () => {
             completeProgress();
             jwPlayerInstance.off('play', onPlayHandler);
             jwPlayerInstance.off('complete', onCompleteHandler);
         };
-        
+
         const onCompleteHandler = () => {
             completeProgress();
             jwPlayerInstance.off('play', onPlayHandler);
             jwPlayerInstance.off('complete', onCompleteHandler);
         };
-        
+
         jwPlayerInstance.on('play', onPlayHandler);
         jwPlayerInstance.on('complete', onCompleteHandler);
-        
+
         // Hide loading for play attempts (buffering after pause)
         jwPlayerInstance.on('buffering', () => {
             if (jwPlayerInstance.getState() !== 'playing') {
@@ -813,7 +791,7 @@ loadChannel = function(index) {
                 updateLoadingProgress(0);
             }
         });
-        
+
         jwPlayerInstance.on('playAttemptFailed', () => {
             hideLoading();
             clearInterval(interval);
@@ -872,8 +850,8 @@ function loadChannel(index) {
 
     activeIndex = index;
     setupChannelList();
-    showChannelInfo(index); // Add this line to show channel info when a channel is loaded
-    
+    showChannelInfo(index);
+
     // Reset reconnection state
     reconnectionAttempts = 0;
     isReconnecting = false;
@@ -883,7 +861,6 @@ function loadChannel(index) {
     const channel = channels[index];
     const config = {
         file: channel.url,
-        
         autostart: true,
     };
 
@@ -893,14 +870,7 @@ function loadChannel(index) {
 
     hideReconnectionMessage();
     jwPlayerInstance.setup(config);
-    
-    // Auto-close sidebar when channel is selected
-    const sidebar = document.getElementById('sidebar');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    sidebar.classList.add('collapsed');
-    const arrow = sidebarToggle.querySelector('.arrow-icon');
-    if (arrow) arrow.textContent = '☰';
-    
+
     // Start monitoring connection
     startHealthCheck();
 }
@@ -919,16 +889,16 @@ window.addEventListener('load', () => {
     const container = document.querySelector('.container');
     const sidebar = document.getElementById('sidebar');
     const sidebarToggle = document.getElementById('sidebarToggle');
-  
+
     // Ensure toggle button is on top of sidebar when open
     container.appendChild(sidebarToggle);
-  
+
     initPlayer();
     populateCategoryDropdown();
     setupChannelList();
     updateClock();
     setInterval(updateClock, 1000);
-  
+
     // Update sidebar toggle functionality to work as floating overlay
     sidebarToggle.addEventListener('click', () => {
         sidebar.classList.toggle('collapsed');
